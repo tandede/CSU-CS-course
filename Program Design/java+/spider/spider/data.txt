@@ -1,0 +1,12 @@
+敏感词记录如下:
+https://top.baidu.com/board?platform=pc&sa=pcindex_entry数据如下: 
+百度  出现  5次
+产品  出现  0次
+
+https://www.baidu.com/数据如下: 
+百度  出现  3次
+产品  出现  1次
+
+总数据如下:     
+百度  出现    8次
+产品  出现    1次
