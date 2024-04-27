@@ -1,0 +1,136 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/03/23 10:59:13
+huibian.asm						     Page 1 - 1
+
+
+				.model small
+				.stack 100h
+
+ 0000				.data
+ 0000 50 72 69 6D 65 20		  message db 'Prime Numbers:$'
+       4E 75 6D 62 65 72
+       73 3A 24
+ 000F 0A 0D 24			  newline db 10, 13, '$'
+ 0012 06			  buffer db 6
+ 0013 0000			  buflen dw 0
+
+ 0000				.code
+ 0000				  main proc
+ 0000  B8 ---- R		    mov ax, @data
+ 0003  8E D8			    mov ds, ax
+
+				    ; 初始化计数器
+ 0005  BB 0002			    mov bx, 2
+
+				    ; 输出提示信息
+ 0008  B4 09			    mov ah, 9
+ 000A  8D 16 0000 R		    lea dx, message
+ 000E  CD 21			    int 21h
+
+ 0010				  find_prime:
+				    ; 初始化判断数和除数
+ 0010  B9 0002			    mov cx, 2
+ 0013  BA 0000			    mov dx, 0
+
+ 0016				  division_check:
+				    ; 检查是否整除
+ 0016  33 C0			    xor ax, ax
+ 0018  8B C3			    mov ax, bx
+ 001A  F7 F1			    div cx
+ 001C  85 D2			    test dx, dx
+ 001E  75 31			    jnz not_prime
+
+				    ; 判断数自增
+ 0020  41			    inc cx
+
+				    ; 检查是否是素数
+ 0021  3B CB			    cmp cx, bx
+ 0023  7E F1			    jle division_check
+
+ 0025				  prime_found:
+				    ; 将素数存入缓冲区
+ 0025  53			    push bx
+ 0026  B4 02			    mov ah, 2
+ 0028  8A 16 0012 R		    mov dl, buffer[0]
+ 002C  CD 21			    int 21h
+ 002E  B2 20			    mov dl, 32 ; 空格
+ 0030  CD 21			    int 21h
+
+				    ; 输出换行符
+ 0032  B4 09			    mov ah, 9
+ 0034  8D 16 000F R		    lea dx, newline
+ 0038  CD 21			    int 21h
+
+				    ; 清空缓冲区
+ 003A  C6 06 0012 R 00		    mov byte ptr buffer[0], 0
+ 003F  C7 06 0013 R 0000	    mov word ptr buflen, 0
+
+ 0045				  prime_increment:
+				    ; 计数自增
+ 0045  43			    inc bx
+
+				    ; 检查是否超过10000000
+ 0046  81 FB 9680		    cmp bx, 10000000
+ 004A  7E C4			    jle find_prime
+
+ 004C				  exit_program:
+				    ; 退出程序
+ 004C  B8 4C00			    mov ax, 4C00h
+ 004F  CD 21			    int 21h
+
+ 0051				  not_prime:
+				    ; 继续寻找下一个数
+ 0051  43			    inc bx
+ 0052  EB BC			    jmp find_prime
+
+ 0054				  main endp
+
+				end main
+Microsoft (R) Macro Assembler Version 6.11		    12/03/23 10:59:13
+huibian.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0015	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0100	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0054	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+main . . . . . . . . . . . . . .	P Near	 0000	  _TEXT	Length= 0054 Public
+  find_prime . . . . . . . . . .	L Near	 0010	  _TEXT	
+  division_check . . . . . . . .	L Near	 0016	  _TEXT	
+  prime_found  . . . . . . . . .	L Near	 0025	  _TEXT	
+  prime_increment  . . . . . . .	L Near	 0045	  _TEXT	
+  exit_program . . . . . . . . .	L Near	 004C	  _TEXT	
+  not_prime  . . . . . . . . . .	L Near	 0051	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+buffer . . . . . . . . . . . . .	Byte	 0012	  _DATA	
+buflen . . . . . . . . . . . . .	Word	 0013	  _DATA	
+message  . . . . . . . . . . . .	Byte	 0000	  _DATA	
+newline  . . . . . . . . . . . .	Byte	 000F	  _DATA	
+
+	   0 Warnings
+	   0 Errors

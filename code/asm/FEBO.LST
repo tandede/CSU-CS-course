@@ -1,0 +1,190 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:38:35
+febo.asm						     Page 1 - 1
+
+
+ 0000				DATAS SEGMENT
+ 0000 0000			    f1 dw 0  ;f即first即第一操作数
+ 0002 0000			    f2 dw 0
+ 0004 0000			    f3 dw 0
+ 0006 0000			    f4 dw 0
+ 0008 0000			    s1 dw 0  ;s即second即第二操作数
+ 000A 0000			    s2 dw 0
+ 000C 0000			    s3 dw 0
+ 000E 0000			    s4 dw 0
+ 0010 0002			    control dw 2;因为第50项有11位，所以我以3位为一组，把11位给分隔开，变为4个3位  
+ 0012				DATAS ENDS
+
+ 0000				STACKS SEGMENT
+				    ;此处输入堆栈段代码
+ 0000				STACKS ENDS
+
+ 0000				CODES SEGMENT
+				    ASSUME CS:CODES,DS:DATAS,SS:STACKS
+ 0000				START:
+ 0000  B8 ---- R		    MOV AX,DATAS
+ 0003  8E D8			    MOV DS,AX
+ 0005  B8 0001			    mov ax,1
+ 0008  A3 0000 R		    mov f1,ax   
+ 000B  A3 0008 R		    mov s1,ax   
+ 000E  A1 0000 R		    mov ax,f1
+ 0011  E8 00CB			    call output
+ 0014  B4 02			    mov ah,02
+ 0016  B2 0A			    mov dl,10
+ 0018  CD 21			    int 21h 
+ 001A  A1 0008 R		    mov ax,s1
+ 001D  E8 00BF			    call output
+ 0020  B4 02			    mov ah,02
+ 0022  B2 0A			    mov dl,10
+ 0024  CD 21			    int 21h 
+ 0026				xunhuan:
+ 0026  A1 0010 R		    mov ax,control
+ 0029  40			    inc ax
+ 002A  A3 0010 R		    mov control,ax ;控制变量加一
+ 002D  A1 0000 R		    mov ax,f1
+ 0030  8B 1E 0008 R		    mov bx,s1
+ 0034  89 1E 0000 R		    mov f1,bx  ;f1往前走一步
+ 0038  03 C3			    add ax,bx
+ 003A  A3 0008 R		    mov s1,ax  ;s1往前走一步，走后s1为本次的结果，也为下次的操作数2
+				   
+ 003D  A1 0002 R		    mov ax,f2
+ 0040  8B 1E 000A R		    mov bx,s2
+ 0044  89 1E 0002 R		    mov f2,bx  
+ 0048  03 C3			    add ax,bx
+ 004A  A3 000A R		    mov s2,ax
+				    
+ 004D  A1 0004 R		    mov ax,f3
+ 0050  8B 1E 000C R		    mov bx,s3
+ 0054  89 1E 0004 R		    mov f3,bx  
+ 0058  03 C3			    add ax,bx
+ 005A  A3 000C R		    mov s3,ax
+				   
+ 005D  A1 0006 R		    mov ax,f4
+ 0060  8B 1E 000E R		    mov bx,s4
+ 0064  89 1E 0006 R		    mov f4,bx  
+ 0068  03 C3			    add ax,bx
+ 006A  A3 000E R		    mov s4,ax
+				    ;至此加法完毕，要进行进位等操作
+				    
+				    
+				    
+ 006D  A1 0008 R		    mov ax,s1
+ 0070  3D 03E7			    cmp ax,999
+ 0073  72 0C			    jb notj2    
+ 0075  2D 03E8			    sub ax,1000
+ 0078  8B 1E 000A R		    mov bx,s2
+ 007C  43			    inc bx
+ 007D  89 1E 000A R		    mov s2,bx
+ 0081				notj2:   
+ 0081  A3 0008 R		    mov s1,ax
+ 0084  A1 000A R		    mov ax,s2
+ 0087  3D 03E8			    cmp ax,1000
+ 008A  72 0C			    jb notj3
+ 008C  2D 03E8			    sub ax,1000
+ 008F  8B 1E 000C R		    mov bx,s3
+ 0093  43			    inc bx
+ 0094  89 1E 000C R		    mov s3,bx
+ 0098				notj3:
+ 0098  A3 000A R		    mov s2,ax
+ 009B  A1 000C R		    mov ax,s3
+ 009E  3D 03E7			    cmp ax,999
+ 00A1  72 0C			    jb notj4
+ 00A3  2D 03E8			    sub ax,1000
+ 00A6  8B 1E 000E R		    mov bx,s4
+ 00AA  43			    inc bx
+ 00AB  89 1E 000E R		    mov s4,bx
+ 00AF				notj4:
+ 00AF  A3 000C R		    mov s3,ax
+ 00B2  A1 000E R		    mov ax,s4
+ 00B5  E8 0027			    call output
+ 00B8  A1 000C R		    mov ax,s3
+ 00BB  E8 0021			    call output
+ 00BE  A1 000A R		    mov ax,s2
+ 00C1  E8 001B			    call output
+ 00C4  A1 0008 R		    mov ax,s1
+ 00C7  E8 0015			    call output
+ 00CA  B4 02			    mov ah,02
+ 00CC  B2 0A			    mov dl,10
+ 00CE  CD 21			    int 21h
+ 00D0  A1 0010 R		    mov ax,control
+ 00D3  83 F8 32			    cmp ax,50
+ 00D6  74 03 E9 FF4B		    jnz xunhuan
+ 00DB  B4 4C			    MOV AH,4ch
+ 00DD  CD 21			    INT 21H
+
+ 00DF				output proc;输出函数ax里存放要输出的数
+ 00DF  B3 00			    mov bl,0
+ 00E1  B1 0A			    mov cl,10
+ 00E3  F6 F1			L3: div cl
+ 00E5  50			    push ax;入栈
+ 00E6  80 C3 01			    add bl,1;计数器加一
+ 00E9  B4 00			    mov ah,0
+ 00EB  83 F8 00			    cmp ax,0;当被除数为0时结束循环
+ 00EE  75 F3			    jne L3
+ 00F0				hui:
+ 00F0  80 FB 03			    cmp bl,3
+ 00F3  74 09			    je  L4
+ 00F5  B8 0000			    mov ax,0
+ 00F8  50			    push ax
+ 00F9  80 C3 01			    add bl,1
+ 00FC  EB F2			    jmp hui
+ 00FE  5A			L4: pop dx;出栈
+ 00FF  80 EB 01			    sub bl,1;计数器减一
+ 0102  8A D6			    mov dl,dh
+ 0104  80 C2 30			    add dl,48
+ 0107  B4 02			    mov ah,2
+ 0109  CD 21			    int 21h
+ 010B  80 FB 00			    cmp bl,0;当计数器清零时结束循环
+ 010E  75 EE			    jne L4
+ 0110  C3			ret
+ 0111				output endp 
+ 0111				CODES ENDS
+				    END START
+
+
+
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:38:35
+febo.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CODES  . . . . . . . . . . . . .	16 Bit	 0111	  Para	  Private 
+DATAS  . . . . . . . . . . . . .	16 Bit	 0012	  Para	  Private 
+STACKS . . . . . . . . . . . . .	16 Bit	 0000	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+output . . . . . . . . . . . . .	P Near	 00DF	  CODES	Length= 0032 Public
+  L3 . . . . . . . . . . . . . .	L Near	 00E3	  CODES	
+  hui  . . . . . . . . . . . . .	L Near	 00F0	  CODES	
+  L4 . . . . . . . . . . . . . .	L Near	 00FE	  CODES	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+START  . . . . . . . . . . . . .	L Near	 0000	  CODES	
+control  . . . . . . . . . . . .	Word	 0010	  DATAS	
+f1 . . . . . . . . . . . . . . .	Word	 0000	  DATAS	
+f2 . . . . . . . . . . . . . . .	Word	 0002	  DATAS	
+f3 . . . . . . . . . . . . . . .	Word	 0004	  DATAS	
+f4 . . . . . . . . . . . . . . .	Word	 0006	  DATAS	
+notj2  . . . . . . . . . . . . .	L Near	 0081	  CODES	
+notj3  . . . . . . . . . . . . .	L Near	 0098	  CODES	
+notj4  . . . . . . . . . . . . .	L Near	 00AF	  CODES	
+s1 . . . . . . . . . . . . . . .	Word	 0008	  DATAS	
+s2 . . . . . . . . . . . . . . .	Word	 000A	  DATAS	
+s3 . . . . . . . . . . . . . . .	Word	 000C	  DATAS	
+s4 . . . . . . . . . . . . . . .	Word	 000E	  DATAS	
+xunhuan  . . . . . . . . . . . .	L Near	 0026	  CODES	
+
+	   0 Warnings
+	   0 Errors

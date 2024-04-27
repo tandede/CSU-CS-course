@@ -1,0 +1,286 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:37:36
+prime.asm						     Page 1 - 1
+
+
+				assume cs:code, ss:stack
+ 0000				zero segment
+ 0000  00				db 0
+ 0001				zero ends
+				 
+ 0000				value segment ;存当前要检查是否为质数的值
+ 0000  0003 0000			dw 3, 0
+ 0004				value ends
+				 
+ 0000				stack segment ;栈
+ 0000  0040 [				dw 40H dup(0)
+        0000
+       ]
+ 0080				stack ends
+				 
+ 0000				code segment
+ 0000				main:
+ 0000  E8 0032				call init ;初始化栈
+					
+ 0003  B2 32				mov dl, '2' ;先输出 2 和空格
+ 0005  B4 02			    mov ah, 2
+ 0007  CD 21			    int 21h 
+ 0009  B2 20				mov dl, ' '
+ 000B  B4 02			    mov ah, 2
+ 000D  CD 21			    int 21h 
+				 
+ 000F  B9 03E8				mov cx, 1000  ;二重循环来枚举 3~1e7 的值
+ 0012				main_s1:
+ 0012  51				push cx
+ 0013  B9 2710				mov cx, 10000
+ 0016					main_s2:
+ 0016  E8 0059					call check ;检查当前枚举到的 value 是否为质数
+ 0019  51					push cx
+ 001A  8B C8					mov cx, ax
+ 001C  E3 03					jcxz main_s3
+ 001E  E8 00B8					call show
+ 0021					main_s3:
+ 0021  59					pop cx
+ 0022  E8 0019					call get_next ;value += 2
+ 0025  E8 0016					call get_next
+ 0028  83 E9 01					sub cx, 1
+ 002B  E2 E9					loop main_s2
+ 002D  59				pop cx
+ 002E  E2 E2				loop main_s1
+				 
+ 0030  B8 4C00				mov ax, 4c00h
+ 0033  CD 21				int 21h
+				 
+ 0035				init: ;初始化栈
+ 0035  B8 ---- R			mov ax, stack
+ 0038  8E D0				mov ss, ax
+ 003A  BC 0040				mov sp, 40H
+ 003D  C3				ret
+				 
+ 003E				get_next: ;计算下一项
+ 003E  52				push dx
+ 003F  56				push si
+ 0040  50				push ax
+ 0041  53				push bx
+ 0042  51				push cx
+ 0043  06				push es
+ 0044  1E				push ds
+				 
+ 0045  B8 ---- R			mov ax, value
+ 0048  8E C0				mov es, ax
+ 004A  26: A1 0000			mov ax, es:[0] ;ax 为低位
+ 004E  26: 8B 1E 0002			mov bx, es:[2] ;bx 为高位
+ 0053  83 C0 01				add ax, 1
+				 
+ 0056  3D 2710				cmp ax, 10000
+ 0059  72 06				jb get_next_done
+				 
+ 005B  B8 0000				mov ax, 0 ;低位超过 10000 则进位
+ 005E  83 C3 01				add bx, 1
+ 0061				get_next_done:
+ 0061  26: A3 0000			mov es:[0], ax
+ 0065  26: 89 1E 0002			mov es:[2], bx
+				 
+ 006A  1F				pop ds
+ 006B  07				pop es
+ 006C  59				pop cx
+ 006D  5B				pop bx
+ 006E  58				pop ax
+ 006F  5E				pop si
+ 0070  5A				pop dx
+ 0071  C3				ret
+				 
+ 0072				check:
+					;mov ax, 1
+					;ret
+				 
+ 0072  51				push cx
+ 0073  52				push dx
+ 0074  56				push si
+ 0075  53				push bx
+ 0076  06				push es
+				 
+ 0077  B8 ---- R			mov ax, value
+ 007A  8E C0				mov es, ax
+ 007C  26: A1 0000			mov ax, es:[0]
+ 0080  26: 8B 1E 0002			mov bx, es:[2]
+ 0085  BA 0002				mov dx, 2
+				 
+ 0088  B9 270F				mov cx, 9999 ;确定试除的上界
+ 008B  83 FB 01				cmp bx, 1
+ 008E  73 0A				jae check_s1
+				 
+ 0090  83 F8 03				cmp ax, 3
+ 0093  76 36				jbe check_is_prime
+				 
+ 0095  8B C8				mov cx, ax
+ 0097  83 E9 01				sub cx, 1
+ 009A				check_s1:
+ 009A  B8 ---- R			mov ax, value
+ 009D  8E C0				mov es, ax
+ 009F  26: A1 0000			mov ax, es:[0]
+ 00A3  26: 8B 1E 0002			mov bx, es:[2]
+ 00A8					check_s2: ;使用当前 cx 的值对 value 进行试除，减法模拟求余运算
+ 00A8  3B C2					cmp ax, dx
+ 00AA  77 12					ja check_minus
+ 00AC  72 05					jb check_s3
+				 
+ 00AE  83 FB 00					cmp bx, 0
+ 00B1  74 1D					je check_is_not_prime ;恰好整除则非质数
+ 00B3						check_s3:
+ 00B3  83 FB 01						cmp bx, 1 ;向高位借位，借不到则无法整除，检查下一个 cx
+ 00B6  72 0A						jb check_s4
+ 00B8  83 EB 01						sub bx, 1
+ 00BB  05 2710						add ax, 10000
+ 00BE							check_minus:
+ 00BE  2B C2							sub ax, dx ;做减法模拟求余运算
+ 00C0  EB E6							jmp check_s2
+ 00C2					check_s4:
+ 00C2  83 E9 01				sub cx, 1
+ 00C5  42				inc dx
+ 00C6  83 F9 01				cmp cx, 1
+ 00C9  77 CF				ja check_s1
+ 00CB				check_is_prime:
+ 00CB  B8 0001				mov ax, 1
+ 00CE  EB 03				jmp check_done
+ 00D0				check_is_not_prime:
+ 00D0  B8 0000				mov ax, 0
+ 00D3				check_done:
+ 00D3  07				pop es
+ 00D4  5B				pop bx
+ 00D5  5E				pop si
+ 00D6  5A				pop dx
+ 00D7  59				pop cx
+ 00D8  C3				ret
+				 
+				 
+				 
+				 
+ 00D9				show: ;输出字符串
+ 00D9  51				push cx
+ 00DA  52				push dx
+ 00DB  56				push si
+ 00DC  50				push ax
+ 00DD  53				push bx
+ 00DE  06				push es
+				 
+ 00DF  B8 ---- R			mov ax, zero
+ 00E2  8E D8				mov ds, ax
+ 00E4  B8 0000			  	mov ax, 0
+ 00E7  A3 0000				mov ds:[0], ax
+				 
+ 00EA  B8 ---- R			mov ax, value
+ 00ED  8E C0				mov es, ax
+ 00EF  26: 8B 1E 0002			mov bx, es:[2] ;先输出高位
+				    
+ 00F4  B9 03E8				mov  cx, 1000
+ 00F7  E8 003C			    call dout  
+ 00FA  B9 0064			    mov  cx, 100
+ 00FD  E8 0036			    call dout    
+ 0100  B9 000A			    mov  cx, 10
+ 0103  E8 0030			    call dout
+ 0106  B9 0001			    mov  cx, 1
+ 0109  E8 002A			    call dout
+				 
+ 010C  26: 8B 1E 0000			mov bx, es:[0] ;再输出低位
+ 0111  B9 03E8				mov  cx, 1000
+ 0114  E8 001F			    call dout
+ 0117  B9 0064			    mov  cx, 100
+ 011A  E8 0019			    call dout
+ 011D  B9 000A			    mov  cx, 10
+ 0120  E8 0013			    call dout
+ 0123  B9 0001			    mov  cx, 1
+ 0126  E8 000D			    call dout
+				 
+ 0129  B2 20				mov dl, ' '
+ 012B  B4 02			    mov ah, 2
+ 012D  CD 21			    int 21h          ;输出一个空格
+				 
+ 012F  07				pop es
+ 0130  5B				pop bx
+ 0131  58				pop ax
+ 0132  5E				pop si
+ 0133  5A				pop dx
+ 0134  59				pop cx
+ 0135  C3				ret
+				 
+ 0136				dout:
+ 0136  52				push dx
+ 0137  56				push si
+ 0138  50				push ax
+ 0139  06				push es
+				 
+ 013A  BA 0000			    mov  dx,0     ;dx清0,除cx时，被除数为dx,ax
+ 013D  8B C3			    mov  ax,bx    ;将bx值（第一次为输入的数，随后为余数）赋值给ax
+ 013F  F7 F1			    div  cx       ;(dx,ax)，实际为ax（dx==0）除以cx（cx值在调用程序前设置，作为参数传递进来）
+ 0141  92			    xchg ax,dx    ;ax与dx交换内容。交换后：ax中为余数，dx中为商
+ 0142  8B D8			    mov  bx,ax    ;将ax值（余数）赋予bx（进入下一轮运算） 
+				                  ;如果用户前面输入65535，那么在第一轮除以10000后，dx中值为6，bx中值为5535
+ 0144  80 FA 00			    cmp  dl,0     
+ 0147  75 0E			    jne  outanum  ;如果dx中值不为0，则直接输出相应的数值
+				    
+ 0149  B8 ---- R			mov ax, zero
+ 014C  8E D8				mov ds, ax
+ 014E  B8 0000				mov ax, 0
+ 0151  39 06 0000			cmp ds:[0], ax   ;如果dx中值为0,那么判断是前面无意义的0，还是中间有意义的0。
+				                  ;如305，那么如果不进行次判断将输入00305。通过此位可以不输出前面两个0，
+				                  ;但是输出中间0。
+ 0155  74 0D			    je   con      ;如果是前面无意义的0 ，则不输出
+ 0157				 outanum:
+ 0157  B8 0001			    mov ax, 1
+ 015A  A3 0000			    mov ds:[0], ax ;如果输出了一个大于0的数字，则置标志位为1，使得其后所有0都会被输出
+					
+ 015D  80 C2 30				add  dl, 30h   ;dl中数值加上30h，变成对应的ASCII码。
+ 0160  B4 02			    mov  ah, 2
+ 0162  CD 21			    int  21h      ;输出该数字
+ 0164				con:
+ 0164  07				pop es
+ 0165  58				pop ax
+ 0166  5E				pop si
+ 0167  5A				pop dx
+ 0168  C3				ret           
+				 
+ 0169				code ends
+				end
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:37:36
+prime.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+code . . . . . . . . . . . . . .	16 Bit	 0169	  Para	  Private 
+stack  . . . . . . . . . . . . .	16 Bit	 0080	  Para	  Private 
+value  . . . . . . . . . . . . .	16 Bit	 0004	  Para	  Private 
+zero . . . . . . . . . . . . . .	16 Bit	 0001	  Para	  Private 
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+check_done . . . . . . . . . . .	L Near	 00D3	  code	
+check_is_not_prime . . . . . . .	L Near	 00D0	  code	
+check_is_prime . . . . . . . . .	L Near	 00CB	  code	
+check_minus  . . . . . . . . . .	L Near	 00BE	  code	
+check_s1 . . . . . . . . . . . .	L Near	 009A	  code	
+check_s2 . . . . . . . . . . . .	L Near	 00A8	  code	
+check_s3 . . . . . . . . . . . .	L Near	 00B3	  code	
+check_s4 . . . . . . . . . . . .	L Near	 00C2	  code	
+check  . . . . . . . . . . . . .	L Near	 0072	  code	
+con  . . . . . . . . . . . . . .	L Near	 0164	  code	
+dout . . . . . . . . . . . . . .	L Near	 0136	  code	
+get_next_done  . . . . . . . . .	L Near	 0061	  code	
+get_next . . . . . . . . . . . .	L Near	 003E	  code	
+init . . . . . . . . . . . . . .	L Near	 0035	  code	
+main_s1  . . . . . . . . . . . .	L Near	 0012	  code	
+main_s2  . . . . . . . . . . . .	L Near	 0016	  code	
+main_s3  . . . . . . . . . . . .	L Near	 0021	  code	
+main . . . . . . . . . . . . . .	L Near	 0000	  code	
+outanum  . . . . . . . . . . . .	L Near	 0157	  code	
+show . . . . . . . . . . . . . .	L Near	 00D9	  code	
+
+	   0 Warnings
+	   0 Errors

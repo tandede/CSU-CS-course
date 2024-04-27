@@ -1,0 +1,117 @@
+Microsoft (R) Macro Assembler Version 6.11		    01/22/24 15:51:16
+mima.asm						     Page 1 - 1
+
+
+				;题目十四 编密码要求：按照以下规律编密码：
+				;字母 A 变为 E，a 变为 e，即变成其他的第一 4 个字母，
+				;W 变 A，X 变 B，Y 变 C，Z 变为 D，非字母不变。如“CHINA”变为“GLMRE！”
+				.MODEL SMALL
+ 0000				.DATA
+ 0000 31 43 32 48 35 49		SOURCE BYTE "1C2H5INAZchi3na8@%&*)(*&^%$#@z!"
+       4E 41 5A 63 68 69
+       33 6E 61 38 40 25
+       26 2A 29 28 2A 26
+       5E 25 24 23 40 7A
+       21
+ 001F  001F [			TARGET BYTE SIZEOF SOURCE DUP(?)
+        00
+       ]
+ 0000				.CODE
+ 0000				MAIN PROC FAR
+ 0000  B8 ---- R		      MOV AX,@DATA
+ 0003  8E D8			      MOV DS,AX
+ 0005  8D 36 0000 R		      LEA SI,SOURCE
+ 0009  8D 3E 001F R		      LEA DI,TARGET
+ 000D  B9 001F			      MOV CX,SIZEOF SOURCE
+ 0010  B4 41			LOOP1:MOV AH,'A'
+ 0012  38 24			      CMP [SI],AH
+ 0014  72 3E			      JB LOOP3
+ 0016  B4 5A			      MOV AH,'Z'
+ 0018  38 24			      CMP [SI],AH
+ 001A  77 16			      JA LOOP2
+ 001C  8A 24			      MOV AH,[SI]
+ 001E  80 C4 04			      ADD AH,4
+ 0021  88 24			      MOV [SI],AH
+ 0023  B4 5A			      MOV AH,'Z'
+ 0025  38 24			      CMP [SI],AH
+ 0027  72 2B			      JB LOOP3
+ 0029  8A 24			      MOV AH,[SI]
+ 002B  80 EC 1A			      SUB AH,26
+ 002E  88 24			      MOV [SI],AH
+ 0030  EB 22			      JMP LOOP3       
+ 0032  B4 61			LOOP2:MOV AH,'a'
+ 0034  38 24			      CMP [SI],AH
+ 0036  72 1C			      JB LOOP3
+ 0038  B4 7A			      MOV AH,'z'
+ 003A  38 24			      CMP [SI],AH
+ 003C  77 16			      JA LOOP3
+ 003E  8A 24			      MOV AH,[SI]
+ 0040  80 C4 04			      ADD AH,4
+ 0043  88 24			      MOV [SI],AH
+ 0045  B4 7A			      MOV AH,'z'
+ 0047  38 24			      CMP [SI],AH
+ 0049  72 09			      JB LOOP3
+ 004B  8A 24			      MOV AH,[SI]
+ 004D  80 EC 1A			      SUB AH,26
+ 0050  88 24			      MOV [SI],AH
+ 0052  EB 00			      JMP LOOP3
+ 0054  8A 24			LOOP3:MOV AH,[SI]
+ 0056  88 25			      MOV [DI],AH
+ 0058  47			      INC DI
+ 0059  46			      INC SI
+ 005A  E2 B4			      LOOP LOOP1
+ 005C  8D 36 001F R		      LEA SI,TARGET
+ 0060  B9 001F			      MOV CX,SIZEOF TARGET
+ 0063  8B 14			LOOP4:MOV DX,[SI]
+ 0065  B4 02			      MOV AH,2H
+ 0067  CD 21			      INT 21H
+ 0069  46			      INC SI
+ 006A  E2 F7			      LOOP LOOP4
+ 006C  B8 4C00			      MOV AX,4C00H
+ 006F  CD 21			      INT 21H      
+ 0071				MAIN ENDP
+				END
+Microsoft (R) Macro Assembler Version 6.11		    01/22/24 15:51:16
+mima.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 003E	  Word	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0071	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+MAIN . . . . . . . . . . . . . .	P Far	 0000	  _TEXT	Length= 0071 Public
+  LOOP1  . . . . . . . . . . . .	L Near	 0010	  _TEXT	
+  LOOP2  . . . . . . . . . . . .	L Near	 0032	  _TEXT	
+  LOOP3  . . . . . . . . . . . .	L Near	 0054	  _TEXT	
+  LOOP4  . . . . . . . . . . . .	L Near	 0063	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+SOURCE . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+TARGET . . . . . . . . . . . . .	Byte	 001F	  _DATA	
+
+	   0 Warnings
+	   0 Errors

@@ -1,0 +1,113 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/01/23 14:01:29
+10jz.asm						     Page 1 - 1
+
+
+				 .MODEL SMALL
+
+				.STACK 100H
+ 0000				.DATA
+ 0000 50 6C 65 61 73 65		      STRING DB 'Please input a munber:$'
+       20 69 6E 70 75 74
+       20 61 20 6D 75 6E
+       62 65 72 3A 24
+ 0017 0000			       S  DW 0
+ 0019 0000			      SUR DW 0
+ 0000				.CODE
+ 0000				START: 
+ 0000  B8 ---- R		      MOV AX,@DATA
+ 0003  8E D8			      MOV DS,AX
+				      
+ 0005  BA 0000 R		      MOV DX,OFFSET STRING        ;输出字符串STRING 
+ 0008  B4 09			      MOV AH,09H
+ 000A  CD 21			      INT 21H
+				      
+ 000C  BA 0000			      MOV DX,0
+ 000F  B4 01			S1:   MOV AH,01H                  ;输入数字 
+ 0011  CD 21			      INT 21H
+ 0013  3C 0D			      CMP AL,0DH
+ 0015  75 2D			      JNZ S4
+ 0017  89 16 0019 R		      MOV SUR,DX                  ;存入SUR 
+				      
+ 001B  E8 0038			      CALL S5
+				      
+ 001E  A1 0019 R		      MOV AX,SUR    
+ 0021  33 D2			      XOR DX,DX
+ 0023  BB 000A			      MOV BX,10                    ;转换为十进制                         
+ 0026  F7 F3			S2:   DIV BX
+ 0028  80 C2 30			      ADD DL,30H
+ 002B  52			      PUSH DX
+ 002C  33 D2			      XOR DX,DX
+ 002E  FF 06 0017 R		      INC S
+ 0032  83 F8 00			      CMP AX,0
+ 0035  75 EF			      JNZ S2      
+				          
+ 0037  8B 0E 0017 R		      MOV CX,S                    ;输出十进制的数字 
+ 003B  5A			S3:   POP DX
+ 003C  B4 02			      MOV AH,02H
+ 003E  CD 21			      INT 21H      
+ 0040  E2 F9			      LOOP S3     
+ 0042  EB 1F			      JMP QUIET
+				            
+ 0044  B7 00			S4:   MOV BH,0                    ;由字符转换为数字 
+ 0046  8A D8			      MOV BL,AL            
+ 0048  B8 000A			      MOV AX,10
+ 004B  F7 E2			      MUL DX
+ 004D  8B D0			      MOV DX,AX
+ 004F  83 EB 30			      SUB BX,30H
+ 0052  03 D3			      ADD DX,BX
+ 0054  EB B9			      JMP S1 
+				      
+ 0056  B4 02			S5:   MOV AH,02H                  ;输出回车换行 
+ 0058  B2 0D			      MOV DL,0DH
+ 005A  CD 21			      INT 21H
+				      
+ 005C  B4 02			      MOV AH,02H
+ 005E  B2 0A			      MOV DL,0AH
+ 0060  CD 21			      INT 21H       
+ 0062  C3			      RET
+
+ 0063  B8 4C00			QUIET:MOV AX,4C00H
+ 0066  CD 21			      INT 21H
+				      END START
+Microsoft (R) Macro Assembler Version 6.11		    12/01/23 14:01:29
+10jz.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 001B	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 0100	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0068	  Word	  Public  'CODE'	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+QUIET  . . . . . . . . . . . . .	L Near	 0063	  _TEXT	
+S1 . . . . . . . . . . . . . . .	L Near	 000F	  _TEXT	
+S2 . . . . . . . . . . . . . . .	L Near	 0026	  _TEXT	
+S3 . . . . . . . . . . . . . . .	L Near	 003B	  _TEXT	
+S4 . . . . . . . . . . . . . . .	L Near	 0044	  _TEXT	
+S5 . . . . . . . . . . . . . . .	L Near	 0056	  _TEXT	
+START  . . . . . . . . . . . . .	L Near	 0000	  _TEXT	
+STRING . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+SUR  . . . . . . . . . . . . . .	Word	 0019	  _DATA	
+S  . . . . . . . . . . . . . . .	Word	 0017	  _DATA	
+
+	   0 Warnings
+	   0 Errors

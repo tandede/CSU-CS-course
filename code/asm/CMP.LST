@@ -1,0 +1,291 @@
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:40:46
+cmp.asm							     Page 1 - 1
+
+
+				.model large
+				assume ds:data, cs:code
+				 
+ 0000				data segment
+ 0000 00			buf db ?               
+ 0001  00			db ?
+ 0002  000A [			db 10 dup(?)
+        00
+       ]
+
+ 000C  01F4 [			array dw 500 dup(?)                                
+        0000
+       ]
+ 03F4  0001 [			number dw 1 dup(?)
+        0000
+       ]
+ 03F6  0001 [			symbol dw 1 dup(?)                                      
+        0000
+       ]
+ 03F8				data ends
+				 
+ 0000				code segment
+					
+ 0000				main:	
+ 0000  C7 06 03F4 R 0000		mov [number], 0
+					
+ 0006				input:
+ 0006  8D 16 0000 R			lea dx, buf                                  ; 输入字符串，到buf中
+ 000A  B4 0A				mov ah, 0ah
+ 000C  CD 21				int 21h
+					
+ 000E  B2 0D				mov dl, 13   ; 打印换行
+ 0010  B4 02				mov ah, 02h
+ 0012  CD 21				int 21h
+ 0014  B2 0A				mov dl, 0ah
+ 0016  B4 02				mov ah, 02h
+ 0018  CD 21				int 21h
+					
+					
+ 001A  8A 1E 0002 R			mov bl, [buf + 2]
+ 001E  80 FB 0D				cmp bl, 13
+ 0021  74 17				jz input_end
+				 
+ 0023  0E E8 0083			call read                                ; 调用ReadUInt，该函数将buf转换成整数，存放到ax中
+					
+ 0027  8B 36 03F4 R			mov si, [number]
+ 002B  D1 E6				shl si, 1                                    ; si = si * 2，一个数字占2个字节，因此乘以2
+ 002D  89 84 000C R			mov [array + si], ax                           ; 将读取的数字存放到数组中
+ 0031  D1 EE				shr si, 1
+ 0033  46				inc si
+ 0034  89 36 03F4 R			mov [number], si
+ 0038  EB CC				jmp input
+					
+ 003A				input_end:
+ 003A  54				push sp
+ 003B  BE 0000				mov si, 0                                    ; 冒泡排序，i=si,j=di
+ 003E  BF 0000				mov di, 0
+ 0041				L1:
+ 0041  3B 36 03F4 R			cmp si, [number]
+ 0045  7D 36				jge L1_END
+ 0047  8B FE				mov di, si                                   ; j = i + 1
+ 0049  47				inc di
+ 004A					L2:
+ 004A  3B 3E 03F4 R				cmp di, [number]
+ 004E  7D 2A					jge L2_END
+ 0050  D1 E6					shl si, 1
+ 0052  D1 E7					shl di, 1
+ 0054  8B 84 000C R				mov ax, [array+si]
+ 0058  8B 9D 000C R				mov bx, [array+di]
+ 005C  D1 EE					shr si, 1
+ 005E  D1 EF					shr di, 1
+ 0060  3B C3					cmp ax, bx
+ 0062  7F 03					jg exchange
+ 0064  47					inc di
+ 0065  EB E3					jmp L2
+ 0067					exchange:
+ 0067  D1 E6					shl si, 1
+ 0069  D1 E7					shl di, 1
+ 006B  89 85 000C R				mov [array+di], ax
+ 006F  89 9C 000C R				mov [array+si], bx
+ 0073  D1 EE					shr si, 1
+ 0075  D1 EF					shr di, 1
+ 0077  47					inc di
+ 0078  EB D0					jmp L2
+ 007A					L2_END:
+ 007A  46					inc si
+ 007B  EB C4					jmp L1
+ 007D					L1_END:
+						
+ 007D  BB 0000					mov bx, 0
+ 0080					L3:
+ 0080  3B 1E 03F4 R				cmp bx, [number]
+ 0084  7D 1F					jge L3_END
+ 0086  8B F3					mov si, bx
+ 0088  D1 E6					shl si, 1
+ 008A  8B 84 000C R				mov ax, [array+si]
+ 008E  0E E8 0070				call print_int
+						
+ 0092  53					push bx
+ 0093  56					push si
+						
+ 0094  B2 0D					mov dl, 13   ; 打印换行
+ 0096  B4 02					mov ah, 02h
+ 0098  CD 21					int 21h
+ 009A  B2 0A					mov dl, 0ah
+ 009C  B4 02					mov ah, 02h
+ 009E  CD 21					int 21h
+						
+ 00A0  5E					pop si
+ 00A1  5B					pop bx
+						
+ 00A2  43					inc bx
+ 00A3  EB DB					jmp L3
+						
+ 00A5				L3_END:
+ 00A5  5C				pop sp
+ 00A6  B4 4C				mov ah, 4ch
+ 00A8  CD 21				int 21h
+					
+ 00AA				read proc
+ 00AA  9C				pushf
+ 00AB  53				push bx
+ 00AC  51				push cx
+ 00AD  52				push dx
+ 00AE  56				push si
+ 00AF  57				push di
+				 
+ 00B0  C7 06 03F6 R 0000		mov [symbol], 0
+ 00B6  B9 0000				mov cx, 0
+ 00B9  8A 0E 0001 R			mov cl, [buf + 1]  ; 获取字符串长度
+ 00BD  8D 36 0002 R			lea si, [buf + 2]  ; 获取字符串地址
+ 00C1  B8 0000				mov ax, 0
+ 00C4  BF 0000				mov di, 0
+				 
+ 00C7  03 F7				add si, di
+ 00C9  8A 1C				mov bl, [si]
+				 
+ 00CB  80 FB 2D				cmp bl, '-'
+ 00CE  75 0A				jne read_s1
+ 00D0  C7 06 03F6 R 0001		mov [symbol], 1
+ 00D6  80 E9 01				sub cl, 1
+ 00D9  47				inc di
+ 00DA				read_s1:
+ 00DA  8D 36 0002 R			lea si, [buf + 2]
+ 00DE  03 F7				add si, di     ; 获取当前处理的字符地址
+ 00E0  47				inc di
+ 00E1  8A 1C				mov bl, [si]   ; 获取字符
+ 00E3  80 EB 30				sub bl, 48     ; 字符减去'0'
+ 00E6  B2 0A				mov dl, 10
+ 00E8  F6 E2				mul dl         ; 乘以10
+ 00EA  B7 00				mov bh, 0
+ 00EC  03 C3				add ax, bx     ; 加上数字
+ 00EE  E2 EA				loop read_s1
+				 
+ 00F0  8B 1E 03F6 R		mov bx, [symbol]
+ 00F4  83 FB 01			cmp bx, 1
+ 00F7  75 02			jne read_s1_end
+ 00F9  F7 D8			neg ax
+ 00FB				read_s1_end:
+ 00FB  5F				pop di
+ 00FC  5E				pop si
+ 00FD  5A				pop dx
+ 00FE  59				pop cx
+ 00FF  5B				pop bx
+ 0100  9D				popf
+ 0101  CB				ret
+ 0102				read endp
+				 
+ 0102				print_int proc
+ 0102  9C				pushf            ; save eflags and register
+ 0103  53				push bx
+ 0104  51				push cx
+ 0105  52				push dx
+				 
+ 0106  C7 06 03F6 R 0000		mov [symbol], 0
+ 010C  83 F8 00				cmp ax, 0
+ 010F  74 04				jz print_zero
+ 0111  78 0A				js print_minus
+ 0113  EB 10				jmp skip_print_zero_and_minus
+ 0115				print_zero:
+ 0115  B2 30				mov dl, '0'
+ 0117  B4 02				mov ah, 02h
+ 0119  CD 21				int 21h
+ 011B  EB 31				jmp print_int_end2
+ 011D				print_minus:
+ 011D  F7 D8				neg ax
+ 011F  C7 06 03F6 R 0001		mov [symbol], 1
+				 
+ 0125				skip_print_zero_and_minus:
+ 0125  B9 0000				mov cx, 0
+ 0128  BB 000A				mov bx, 10
+ 012B				print_int_loop1:
+ 012B  BA 0000				mov dx, 0
+ 012E  F7 F3				div bx
+ 0130  80 C2 30				add dl, 30h
+ 0133  52				push dx
+ 0134  41				inc cx
+ 0135  83 F8 00				cmp ax, 0
+ 0138  75 F1				jne print_int_loop1
+				 
+ 013A  83 3E 03F6 R 01			cmp [symbol], 1
+ 013F  75 06				jnz print_int_loop2
+ 0141  B2 2D				mov dl, '-'   
+ 0143  B4 02				mov ah, 02h
+ 0145  CD 21				int 21h
+ 0147				print_int_loop2:
+ 0147  5A				pop dx
+ 0148  B4 02				mov ah, 02h
+ 014A  CD 21				int 21h
+ 014C  E2 F9				loop print_int_loop2
+					
+ 014E				print_int_end2:
+ 014E  B2 0D				mov dl, 13   ; 打印换行
+ 0150  B4 02				mov ah, 02h
+ 0152  CD 21				int 21h
+					
+ 0154  5A				pop dx
+ 0155  59				pop cx
+ 0156  5B				pop bx
+ 0157  9D			    popf
+ 0158  CB				ret
+ 0159				print_int endp
+ 0159				code ends
+				end main    
+Microsoft (R) Macro Assembler Version 6.11		    12/21/23 18:40:46
+cmp.asm							     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+CMP_TEXT . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'CODE'	
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'DATA'	
+code . . . . . . . . . . . . . .	16 Bit	 0159	  Para	  Private 
+data . . . . . . . . . . . . . .	16 Bit	 03F8	  Para	  Private 
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+print_int  . . . . . . . . . . .	P Far	 0102	  code	Length= 0057 Public
+  print_zero . . . . . . . . . .	L Near	 0115	  code	
+  print_minus  . . . . . . . . .	L Near	 011D	  code	
+  skip_print_zero_and_minus  . .	L Near	 0125	  code	
+  print_int_loop1  . . . . . . .	L Near	 012B	  code	
+  print_int_loop2  . . . . . . .	L Near	 0147	  code	
+  print_int_end2 . . . . . . . .	L Near	 014E	  code	
+read . . . . . . . . . . . . . .	P Far	 00AA	  code	Length= 0058 Public
+  read_s1  . . . . . . . . . . .	L Near	 00DA	  code	
+  read_s1_end  . . . . . . . . .	L Near	 00FB	  code	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0001h	 
+@DataSize  . . . . . . . . . . .	Number	 0001h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0005h	 
+@code  . . . . . . . . . . . . .	Text   	 CMP_TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+L1_END . . . . . . . . . . . . .	L Near	 007D	  code	
+L1 . . . . . . . . . . . . . . .	L Near	 0041	  code	
+L2_END . . . . . . . . . . . . .	L Near	 007A	  code	
+L2 . . . . . . . . . . . . . . .	L Near	 004A	  code	
+L3_END . . . . . . . . . . . . .	L Near	 00A5	  code	
+L3 . . . . . . . . . . . . . . .	L Near	 0080	  code	
+array  . . . . . . . . . . . . .	Word	 000C	  data	
+buf  . . . . . . . . . . . . . .	Byte	 0000	  data	
+exchange . . . . . . . . . . . .	L Near	 0067	  code	
+input_end  . . . . . . . . . . .	L Near	 003A	  code	
+input  . . . . . . . . . . . . .	L Near	 0006	  code	
+main . . . . . . . . . . . . . .	L Near	 0000	  code	
+number . . . . . . . . . . . . .	Word	 03F4	  data	
+symbol . . . . . . . . . . . . .	Word	 03F6	  data	
+
+	   0 Warnings
+	   0 Errors
